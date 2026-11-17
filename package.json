@@ -1,0 +1,26 @@
+{
+  "name": "lendly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LENDLY hyperlocal peer-to-peer borrowing and rental platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @lendly/shared && concurrently -n api,web -c green,cyan \"npm run dev -w @lendly/api\" \"npm run dev -w @lendly/web\"",
+    "dev:api": "npm run dev -w @lendly/api",
+    "dev:web": "npm run dev -w @lendly/web",
+    "build": "npm run build -w @lendly/shared && npm run build -w @lendly/api && npm run build -w @lendly/web",
+    "typecheck": "npm run typecheck -w @lendly/shared && npm run typecheck -w @lendly/api && npm run typecheck -w @lendly/web",
+    "test": "npm run test -w @lendly/api && npm run test -w @lendly/web",
+    "lint": "npm run lint -w @lendly/api && npm run lint -w @lendly/web",
+    "seed": "npm run seed -w @lendly/api"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

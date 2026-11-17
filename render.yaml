@@ -1,0 +1,52 @@
+# Render blueprint for LENDLY (https://render.com/docs/blueprint-spec)
+#
+# Deploy with: Render dashboard -> New -> Blueprint -> point at this repo.
+# After the first deploy, set the two sync:false values in the dashboard:
+#   MONGODB_URI  -> your MongoDB Atlas connection string
+#   WEB_ORIGIN   -> the public URL of the lendly-web static site
+#   CLIENT_URL   -> same as WEB_ORIGIN
+#   VITE_API_URL -> the public URL of lendly-api
+
+services:
+  - type: web
+    name: lendly-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: npm ci && npm run build -w @lendly/shared && npm run build -w @lendly/api
+    startCommand: npm run start -w @lendly/api
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: WEB_ORIGIN
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      # Never expose reset tokens in production (there is no mail server yet).
+      - key: EXPOSE_RESET_TOKEN
+        value: "false"
+
+  - type: web
+    name: lendly-web
+    runtime: static
+    rootDir: .
+    buildCommand: npm ci && npm run build -w @lendly/shared && npm run build -w @lendly/web
+    staticPublishPath: ./apps/web/dist
+    autoDeploy: true
+    routes:
+      # Single page app fallback: every route serves index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
