@@ -1,11 +1,11 @@
 # Render blueprint for LENDLY (https://render.com/docs/blueprint-spec)
 #
 # Deploy with: Render dashboard -> New -> Blueprint -> point at this repo.
-# After the first deploy, set the two sync:false values in the dashboard:
+# After the first deploy, set the sync:false value in the dashboard:
 #   MONGODB_URI  -> your MongoDB Atlas connection string
-#   WEB_ORIGIN   -> the public URL of the lendly-web static site
-#   CLIENT_URL   -> same as WEB_ORIGIN
-#   VITE_API_URL -> the public URL of lendly-api
+# The public URLs (WEB_ORIGIN, CLIENT_URL, VITE_API_URL) are set below and
+# must match the actual Render service URLs. Update them if the services are
+# recreated (the URL suffixes change).
 
 services:
   - type: web
@@ -28,9 +28,9 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: WEB_ORIGIN
-        sync: false
+        value: https://lendly-web-vv48.onrender.com
       - key: CLIENT_URL
-        sync: false
+        value: https://lendly-web-vv48.onrender.com
       # Never expose reset tokens in production (there is no mail server yet).
       - key: EXPOSE_RESET_TOKEN
         value: "false"
@@ -39,14 +39,20 @@ services:
     name: lendly-web
     runtime: static
     rootDir: .
-    buildCommand: npm ci && npm run build -w @lendly/shared && npm run build -w @lendly/web
+    # Install devDependencies for the build: vite, @vitejs/plugin-react and vitest
+    # (used by vite.config.ts) are devDependencies, and NODE_ENV=production would
+    # otherwise make `npm ci` skip them.
+    buildCommand: NODE_ENV=development npm ci && npm run build -w @lendly/shared && npm run build -w @lendly/web
     staticPublishPath: ./apps/web/dist
     autoDeploy: true
     routes:
-      # Single page app fallback: every route serves index.html
+      # Single page app fallback: every route (including root "/") serves index.html
+      - type: rewrite
+        source: /
+        destination: /index.html
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://lendly-api-b7is.onrender.com
